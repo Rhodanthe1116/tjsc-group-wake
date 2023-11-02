@@ -385,12 +385,13 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
     peopleOfGroups.forEach((people, i) => {
       const sta = statistics(people)
 
-      sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[``, '日本', '台灣', '日男', '日女', '台男', '台女']]);
-      sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[`場次 ${eventIndex + 1} - 組別 ${i + 1}`, sta.jpNum, sta.twNum, sta.jpMale, sta.jpFemale, sta.twMale, sta.twFemale]]);
+      sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[`場次 ${eventIndex + 1} - 組別 ${i + 1}`, '日本', '台灣', '日男', '日女', '台男', '台女']]);
+      sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[``, sta.jpNum, sta.twNum, sta.jpMale, sta.jpFemale, sta.twMale, sta.twFemale]]);
 
       const arr = people.map((p, index) => [p[NAME], p[NATION], p[GENDER], p[p[NATION] === '日本' ? TWLEVEL : JPLEVEL]])
       sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, arr.length, arr[0].length).setValues(arr)
 
+      sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 1).setValues([['  ']]);
 
     })
 
