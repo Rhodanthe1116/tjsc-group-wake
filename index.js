@@ -26,13 +26,16 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
   // allPeople.sort((p1, p2) => (p1[OK] + p1[NOTSURE] * 0.9) - (p2[OK] + p2[NOTSURE] * 0.9))
   // insertSheet(people, '計算過後')
 
-  const japanese = allPeople.filter(person => person[NATION] === '日本')
-  const taiwanese = allPeople.filter(person => person[NATION] !== '日本')
+  const japanese = allPeople.filter(isJp)
+  const taiwanese = allPeople.filter(isTw)
   console.log(japanese.length)
   console.log(taiwanese.length)
 
   const EVENT_NUM = 6
   const MAX_NUM = 72
+  const MAX_NUMS = [
+    72, 64, 64, 64, 64, 72
+  ]
   const JP_TW_RATIO = 2 / 3
   const peopleOfEvents = []
   for (let i = 0; i < EVENT_NUM; i++) {
@@ -67,16 +70,16 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
       person[OKEVENT].sort((a, b) => {
         const aSta = statistics(peopleOfEvents[a])
         const bSta = statistics(peopleOfEvents[b])
-        if (person[NATION] === '日本' && person[GENDER] === '男') {
+        if (isJp(person) && person[GENDER] === '男') {
           return aSta.jpMale - bSta.jpMale
         }
-        if (person[NATION] === '日本' && person[GENDER] === '女') {
+        if (isJp(person) && person[GENDER] === '女') {
           return aSta.jpFemale - bSta.jpFemale
         }
-        if (person[NATION] !== '日本' && person[GENDER] === '男') {
+        if (!isJp(person) && person[GENDER] === '男') {
           return aSta.twMale - bSta.twMale
         }
-        if (person[NATION] !== '日本' && person[GENDER] === '女') {
+        if (!isJp(person) && person[GENDER] === '女') {
           return aSta.twFemale - bSta.twFemale
         }
       })
@@ -84,10 +87,10 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
       while (person[OKEVENT].length > 0) {
         const toJoin = person[OKEVENT].shift()
         const sta = statistics(peopleOfEvents[toJoin])
-        if (person[NATION] === '日本' && sta.jpNum >= MAX_NUM / 2) {
+        if (isJp(person) && sta.jpNum >= MAX_NUMS[toJoin] / 2) {
           continue
         }
-        if (person[NATION] !== '日本' && sta.twNum >= MAX_NUM / 2) {
+        if (!isJp(person) && sta.twNum >= MAX_NUMS[toJoin] / 2) {
           continue
         }
 
@@ -102,166 +105,16 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
 
   /////////////////////////////////
 
-  // let remaining = allPeople
-  // const poorPeople = remaining.filter(person => (person[OK] + person[NOTSURE]) <= expectedTimes)
-  // poorPeople.forEach(person => {
-  //   for (let i = 0; i < EVENT_NUM; i++) {
-  //     if (person[FIRST_EVENT + i] !== NO_S) {
-  //       peopleOfEvents[i].push(person)
-  //     }
-  //   }
-  // })
-  // remaining = remaining.filter(person => !((person[OK] + person[NOTSURE]) <= expectedTimes))
-  // const poorPeople2 = remaining.filter(person => person[OK] <= expectedTimes)
-  // poorPeople2.forEach(person => {
-  //   for (let i = 0; i < EVENT_NUM; i++) {
-  //     if (person[FIRST_EVENT + i] === OK_S) {
-  //       peopleOfEvents[i].push(person)
-  //     }
-  //   }
-  // })
-  // remaining = remaining.filter(person => !(person[OK] <= expectedTimes))
-  // remaining.sort((p1, p2) => (p1[OK]) - (p2[OK]))
-  // remaining.forEach(person => {
-  //   const okEvents = []
-  //   for (let i = 0; i < EVENT_NUM; i++) {
-  //     if (person[FIRST_EVENT + i] === OK_S) {
-  //       okEvents.push({
-  //         event: i,
-  //         sta: statistics(peopleOfEvents[i])
-  //       })
-  //     }
-  //   }
-
-  //   okEvents.sort((a, b) => {
-  //     if (person[NATION] === '日本' && person[GENDER] === '男') {
-  //       return a.sta.jpMale - b.sta.jpMale
-  //     }
-  //     if (person[NATION] === '日本' && person[GENDER] === '女') {
-  //       return a.sta.jpFemale - b.sta.jpFemale
-  //     }
-  //     if (person[NATION] !== '日本' && person[GENDER] === '男') {
-  //       return a.sta.twMale - b.sta.twMale
-  //     }
-  //     if (person[NATION] !== '日本' && person[GENDER] === '女') {
-  //       return a.sta.twFemale - b.sta.twFemale
-  //     }
-  //   })
-
-
-  //   const es = okEvents.map(e => e.event)
-  //   peopleOfEvents[es[0]].push(person)
-  //   peopleOfEvents[es[1]].push(person)
-  // })
-
-  /////////////////////////////////
-
-  // const howManyTimes = {}
-  // allPeople.forEach(person => howManyTimes[person[NAME]] = 0)
-
-  // for (let event = 0; event < EVENT_NUM; event++) {
-
-  //   // if (peopleOfEvents[event] > MAX_NUM) {
-  //   //   break
-  //   // }
-
-
-  //   const peopleWhoCanJoin = shuffleArray(allPeople.filter(person => person[FIRST_EVENT + event] !== NO_S))
-
-  //   const japanese = peopleWhoCanJoin.filter(person => person[NATION] === '日本')
-  //   const taiwanese = peopleWhoCanJoin.filter(person => person[NATION] !== '日本')
-
-  //   // peopleOfEvents[event] = peopleOfEvents[event].concat(getMultipleRandom(japanese, MAX_NUM / 2 - statistics(currentEventPeople).jpNum))
-  //   // peopleOfEvents[event] = peopleOfEvents[event].concat(getMultipleRandom(taiwanese, MAX_NUM / 2 - statistics(currentEventPeople).twNum))
-
-  //   const okpeople = peopleWhoCanJoin.filter(person => person[FIRST_EVENT + event] === OK_S)
-  //   const okjapanese = okpeople.filter(person => person[NATION] === '日本')
-  //   const oktaiwanese = okpeople.filter(person => person[NATION] !== '日本')
-  //   // peopleOfEvents[event].push([...poorPeople])
-
-  //   // const notsurepeople = remaining.filter(person => person[FIRST_EVENT + event] === NOTSURE_S)
-  //   // const notsurejapanese = notsurepeople.filter(person => person[NATION] === '日本')
-  //   // const notsuretaiwanese = notsurepeople.filter(person => person[NATION] !== '日本')
-
-  //   const remainingPeople = []
-  //   peopleWhoCanJoin.forEach(person => {
-
-
-  //     let probability = 0
-  //     const leftEventNumThisPersonCanGo = person.slice(FIRST_EVENT + event, FIRST_EVENT + 6).filter(val => val !== NO_S).length
-  //     const poorNow = (expectedTimes - howManyTimes[person[NAME]]) / (leftEventNumThisPersonCanGo)
-
-  //     probability = poorNow
-
-  //     person = [...person, '', 'poorNow', poorNow, probability]
-
-  //     if (chosen(probability)) {
-  //       peopleOfEvents[event].push(person)
-  //       howManyTimes[person[NAME]] += 1
-  //     } else {
-  //       remainingPeople.push(person)
-  //     }
-  //   })
-
-  //   const chosenNum = peopleOfEvents[event].length
-  //   const chosenJp = peopleOfEvents[event].filter(person => person[NATION] === '日本')
-  //   const chosenTw = peopleOfEvents[event].filter(person => person[NATION] !== '日本')
-  //   const remainingJp = remainingPeople.filter(person => person[NATION] === '日本')
-  //   const remainingTw = remainingPeople[event].filter(person => person[NATION] !== '日本')
-
-  //   remainingPeople.forEach(person => {
-
-
-  //     const chosenNationNum = (person[NATION] === '日本' ? chosenJp.length : chosenTw.length)
-  //     const expectedNationNum = MAX_NUM / 2
-  //     const nationNumToChoose = (person[NATION] === '日本' ? remainingJp.length : remainingTw.length)
-  //     const nation = (expectedNationNum - chosenNationNum) / nationNumToChoose
-
-  //     let probability = nation
-  //     if (person[FIRST_EVENT + event] === NOTSURE_S) {
-  //       probability *= 0.5
-  //     }
-
-  //     person = [...person, '', person[FIRST_EVENT + event], nation, probability]
-
-  //     if (chosen(probability)) {
-  //       peopleOfEvents[event].push(person)
-  //       howManyTimes[person[NAME]] += 1
-  //     }
-  //   })
-
-  // }
-
-
-
-  // for (let i = 0; i < EVENT_NUM; i++) {
-  //   people = shuffleArray(people);
-  //   people.sort((p1, p2) => (p1[OK] + p1[NOTSURE] * 0.5) - (p2[OK] + p2[NOTSURE] * 0.5))
-
-  //   const peopleToBeSplit = people.filter(person => person[FIRST_EVENT + i] === OK)
-  //   console.log(peopleToBeSplit[0])
-  //   const notsurepeople = people.filter(person => person[FIRST_EVENT + i] === NOTSURE_S)
-
-
-  //   const okjapanese = peopleToBeSplit.filter(person => person[NATION] === '日本')
-  //   const oktaiwanese = peopleToBeSplit.filter(person => person[NATION] !== '日本')
-  //   console.log(`第${i + 1}場`)
-  //   console.log(okjapanese.length)
-  //   console.log(oktaiwanese.length)
-  //   peopleOfEvents[i] = [...peopleOfEvents[i], ...okjapanese.slice(0, MAX_NUM)]
-  //   peopleOfEvents[i] = [...peopleOfEvents[i], ...oktaiwanese.slice(0, MAX_NUM)]
-  // }
-
   function statistics(people) {
-    const jpNum = people.filter(person => person[NATION] === '日本').length
+    const jpNum = people.filter(isJp).length
     const twNum = people.length - jpNum
     const maleNum = people.filter(person => person[GENDER] === '男').length
     const femaleNum = people.filter(person => person[GENDER] === '女').length
 
-    const jpMale = people.filter(person => person[NATION] === '日本').filter(p => p[GENDER] === '男').length
-    const jpFemale = people.filter(person => person[NATION] === '日本').filter(p => p[GENDER] === '女').length
-    const twMale = people.filter(person => person[NATION] !== '日本').filter(p => p[GENDER] === '男').length
-    const twFemale = people.filter(person => person[NATION] !== '日本').filter(p => p[GENDER] === '女').length
+    const jpMale = people.filter(isJp).filter(p => p[GENDER] === '男').length
+    const jpFemale = people.filter(isJp).filter(p => p[GENDER] === '女').length
+    const twMale = people.filter(isTw).filter(p => p[GENDER] === '男').length
+    const twFemale = people.filter(isTw).filter(p => p[GENDER] === '女').length
 
     return {
       jpNum, twNum, maleNum, femaleNum, jpMale,
@@ -321,7 +174,10 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
 
   peopleOfEvents.forEach((allPeopleOfEvent, eventIndex) => {
     const MAX_GROUP_NUM = 6
-    const GROUP_NUM = 12
+    const MAX_GROUP_NUMS = [
+      6, 4, 4, 4, 4, 6
+    ]
+    const GROUP_NUM = allPeopleOfEvent.length / MAX_GROUP_NUMS[eventIndex]
     const peopleOfGroups = []
     for (let i = 0; i < GROUP_NUM; i++) {
       peopleOfGroups.push([])
@@ -331,8 +187,6 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
     // 每個人參加次數盡量平均MAX_NUM * EVENT_NUM / people.length
     // 每場日台1:1
     // 每場男女1:1
-    const expectedTimes = Math.round(MAX_GROUP_NUM * GROUP_NUM / allPeopleOfEvent.length)
-    console.log({ expectedTimes })
 
     const OKGROUP = OKEVENT
     for (let i = 0; i < allPeopleOfEvent.length; i++) {
@@ -349,16 +203,16 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
       person[OKGROUP].sort((a, b) => {
         const aSta = statistics(peopleOfGroups[a])
         const bSta = statistics(peopleOfGroups[b])
-        if (person[NATION] === '日本' && person[GENDER] === '男') {
+        if (isJp(person) && person[GENDER] === '男') {
           return aSta.jpMale - bSta.jpMale
         }
-        if (person[NATION] === '日本' && person[GENDER] === '女') {
+        if (isJp(person) && person[GENDER] === '女') {
           return aSta.jpFemale - bSta.jpFemale
         }
-        if (person[NATION] !== '日本' && person[GENDER] === '男') {
+        if (!isJp(person) && person[GENDER] === '男') {
           return aSta.twMale - bSta.twMale
         }
-        if (person[NATION] !== '日本' && person[GENDER] === '女') {
+        if (!isJp(person) && person[GENDER] === '女') {
           return aSta.twFemale - bSta.twFemale
         }
       })
@@ -366,10 +220,10 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
       while (person[OKGROUP].length > 0) {
         const toJoin = person[OKGROUP].shift()
         const sta = statistics(peopleOfGroups[toJoin])
-        if (person[NATION] === '日本' && sta.jpNum >= MAX_GROUP_NUM / 2) {
+        if (isJp(person) && sta.jpNum >= MAX_GROUP_NUMS[eventIndex] / 2) {
           continue
         }
-        if (person[NATION] !== '日本' && sta.twNum >= MAX_GROUP_NUM / 2) {
+        if (!isJp(person) && sta.twNum >= MAX_GROUP_NUMS[eventIndex] / 2) {
           continue
         }
 
@@ -388,7 +242,7 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
       sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[`場次 ${eventIndex + 1} - 組別 ${i + 1}`, '日本', '台灣', '日男', '日女', '台男', '台女']]);
       sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 7).setValues([[``, sta.jpNum, sta.twNum, sta.jpMale, sta.jpFemale, sta.twMale, sta.twFemale]]);
 
-      const arr = people.map((p, index) => [p[NAME], p[NATION], p[GENDER], p[p[NATION] === '日本' ? TWLEVEL : JPLEVEL]])
+      const arr = people.map((p, index) => [p[NAME], p[NATION], p[GENDER], p[isJp(p) ? TWLEVEL : JPLEVEL]])
       sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, arr.length, arr[0].length).setValues(arr)
 
       sheetOfThisEvent.getRange(sheetOfThisEvent.getLastRow() + 1, 1, 1, 1).setValues([['  ']]);
@@ -398,9 +252,16 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
   })
 
 
+  function isJp(person) {
+    return person[NATION] === '日本' || person[NATION] === '台日混血/日台ハーフ'
+  }
+  function isTw(person) {
+    return !isJp(person)
+  }
 
   return
 }
+
 
 function mean(arr) {
   const n = arr.length;
