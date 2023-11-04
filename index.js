@@ -53,20 +53,74 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
   for (var i = 0; i < allPeople.length; i++) {
     const okEvents = []
     for (let event = 0; event < EVENT_NUM; event++) {
-      if (allPeople[i][FIRST_EVENT + event] !== NO_S) {
+      if (allPeople[i][FIRST_EVENT + event] === OK_S) {
         okEvents.push(event)
       }
     }
     allPeople[i].push(okEvents)
   }
-  // allPeople.sort((p1, p2) => (p1[OK]) - (p2[OK]))
+  const NOTSUREEVENT = allPeople[0].length
+  for (var i = 0; i < allPeople.length; i++) {
+    const notsureEvents = []
+    for (let event = 0; event < EVENT_NUM; event++) {
+      if (allPeople[i][FIRST_EVENT + event] === NOTSURE_S) {
+        notsureEvents.push(event)
+      }
+    }
+    allPeople[i].push(notsureEvents)
+  }
+
+  const howMany = {}
+  for (let i = 0; i < allPeople.length; i++) {
+    howMany[allPeople[i][NAME]] = 0
+  }
 
   for (let t = 0; t < MAX_NUM; t++) {
+
+    if (t === 0) {
+      allPeople.sort((p1, p2) => (p1[OK]) - (p2[OK]))
+    } else {
+      allPeople = shuffleArray(allPeople)
+    }
+
     for (var i = 0; i < allPeople.length; i++) {
-
-
-
       const person = allPeople[i]
+
+      if (person[OKEVENT].length === 0 && howMany[person[NAME]] === 0) {
+        person[NOTSUREEVENT].sort((a, b) => {
+          const aSta = statistics(peopleOfEvents[a])
+          const bSta = statistics(peopleOfEvents[b])
+          if (isJp(person) && person[GENDER] === '男') {
+            return aSta.jpMale - bSta.jpMale
+          }
+          if (isJp(person) && person[GENDER] === '女') {
+            return aSta.jpFemale - bSta.jpFemale
+          }
+          if (!isJp(person) && person[GENDER] === '男') {
+            return aSta.twMale - bSta.twMale
+          }
+          if (!isJp(person) && person[GENDER] === '女') {
+            return aSta.twFemale - bSta.twFemale
+          }
+        })
+
+        while (person[NOTSUREEVENT].length > 0) {
+          const toJoin = person[NOTSUREEVENT].shift()
+          const sta = statistics(peopleOfEvents[toJoin])
+          if (isJp(person) && sta.jpNum >= MAX_NUMS[toJoin] / 2) {
+            continue
+          }
+          if (!isJp(person) && sta.twNum >= MAX_NUMS[toJoin] / 2) {
+            continue
+          }
+
+          peopleOfEvents[toJoin].push(person)
+          howMany[person[NAME]] += 1
+          break
+
+        }
+      }
+
       person[OKEVENT].sort((a, b) => {
         const aSta = statistics(peopleOfEvents[a])
         const bSta = statistics(peopleOfEvents[b])
@@ -84,8 +138,9 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
         }
       })
 
-      while (person[OKEVENT].length > 0) {
-        const toJoin = person[OKEVENT].shift()
+
+      for (let jjj = 0; jjj < person[OKEVENT].length; jjj++) {
+        const toJoin = person[OKEVENT][jjj]
         const sta = statistics(peopleOfEvents[toJoin])
         if (isJp(person) && sta.jpNum >= MAX_NUMS[toJoin] / 2) {
           continue
@@ -95,11 +150,15 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
         }
 
         peopleOfEvents[toJoin].push(person)
+        howMany[person[NAME]] += 1
+        person[OKEVENT] = [...person[OKEVENT].slice(0, jjj), ...person[OKEVENT].slice(jjj + 1)]
         break
-
       }
 
+
     }
+
+
   }
 
 
@@ -148,6 +207,7 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
   console.log('標準差', standardDeviation(allPeople.map(p => p[p.length - 1])))
   console.log('平均', mean(allPeople.map(p => p[p.length - 1])))
 
+  allPeople.sort((p1, p2) => p1[OK] - p2[OK])
   allPeople.sort((p1, p2) => p1[JOIN_TIMES] - p2[JOIN_TIMES])
   const sta = insertSheet(allPeople.map((p, index) => [p[NAME], p[NATION], p[GENDER], p[OK], p[NOTSURE], p[NO],
   `=IF(VLOOKUP($A${index + 1}, '表單回應 1'!$C:$P, ${8 + 0}, false) = "無法參加/参加できない", "x", IF(IFNA(VLOOKUP(A${index + 1}, '場次 1'!A:H, 1, false))= A${index + 1}, "O", IF(VLOOKUP($A${index + 1}, '表單回應 1'!$C:$P, ${8 + 0}, false) = "想參加不確定有沒有空/参加したいのですが現時点日程未定", "?", "")))`,
