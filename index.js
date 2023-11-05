@@ -36,7 +36,6 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
   const MAX_NUMS = [
     72, 64, 64, 64, 64, 72
   ]
-  const JP_TW_RATIO = 2 / 3
   const peopleOfEvents = []
   for (let i = 0; i < EVENT_NUM; i++) {
     peopleOfEvents.push([])
@@ -44,8 +43,8 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
 
   // 每場大約max_num人
   // 每個人參加次數盡量平均MAX_NUM * EVENT_NUM / people.length
-  // 每場日台1:1
-  // 每場男女1:1
+  // 每場日台各一半
+  // 男女平均分散在各個場次
   const expectedTimes = Math.round(MAX_NUM * EVENT_NUM / allPeople.length)
   console.log({ expectedTimes })
 
@@ -242,11 +241,6 @@ function splitDataIntoRandomGroups(N = 10, SHEET = '表單回應 1') {
     for (let i = 0; i < GROUP_NUM; i++) {
       peopleOfGroups.push([])
     }
-
-    // 每場大約max_num人
-    // 每個人參加次數盡量平均MAX_NUM * EVENT_NUM / people.length
-    // 每場日台1:1
-    // 每場男女1:1
 
     const OKGROUP = OKEVENT
     for (let i = 0; i < allPeopleOfEvent.length; i++) {
